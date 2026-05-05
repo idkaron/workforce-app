@@ -13,7 +13,7 @@ export default function AuthPage({ mode, setPage, onAuth, onDemo }) {
     ev.preventDefault(); setErr(''); setBusy(true);
     try {
       if (isLogin) {
-        const u = login(form.email, form.password);
+        const u = await login(form.email, form.password);
         toast(`Welcome back, ${u.name}!`);
         onAuth(u);
       } else {
