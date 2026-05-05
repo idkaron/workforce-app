@@ -1,5 +1,5 @@
 import { useState, useEffect, createContext, useContext, useCallback } from 'react';
-import { initStore, getSession, logout, demoLogin, login, create, update, getAll, syncWithServer } from './store.js';
+import { getSession, logout, demoLogin, login, create, update, getAll, syncWithServer } from './store.js';
 
 // ─── Context ──────────────────────────────────────────────────────────────────
 export const Ctx = createContext(null);
@@ -337,7 +337,6 @@ export default function App() {
 
   // Init store + session + sync
   useEffect(() => {
-    initStore();
     syncWithServer();
     const handleSync = () => setSyncKey(s => s + 1);
     window.addEventListener('wop_sync_complete', handleSync);
