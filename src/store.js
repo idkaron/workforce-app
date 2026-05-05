@@ -108,7 +108,11 @@ export function demoLogin(role) {
 }
 
 // ─── Domain helpers ───────────────────────────────────────────────────────────
-export function getMyTeam(managerId) { return read('users').filter(u => u.managerId === managerId); }
+export function getMyTeam(managerId) { 
+  const me = read('users').find(x => x.id === managerId);
+  if (!me) return [];
+  return read('users').filter(u => u.role === 'employee' && u.dept === me.dept); 
+}
 export function getTasksForManager(managerId) {
   const team = getMyTeam(managerId).map(u => u.id);
   return read('tasks').filter(t => team.includes(t.assignedTo) || t.createdBy === managerId);
