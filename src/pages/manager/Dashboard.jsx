@@ -51,7 +51,7 @@ export default function MgrDashboard() {
                 const emp = getAll('users').find(u=>u.id===t.assignedTo);
                 const risk = taskRisk(t);
                 const days = Math.ceil((new Date(t.deadline)-now)/86400000);
-                const sMap = { assigned:'blue', in_progress:'primary', submitted:'yellow', approved:'green', rejected:'red', closed:'green', overdue:'red' };
+                const sMap = { assigned:'blue', in_progress:'primary', submitted:'yellow', approved:'green', rejected:'red', closed:'green', forwarded:'purple', waiting_approval:'yellow', sent_to_client:'blue', client_approved:'green', completed:'green', overdue:'red' };
                 const pMap = { low:'green', medium:'blue', high:'yellow', critical:'red' };
                 return (
                   <tr key={t.id}>
@@ -107,8 +107,9 @@ export default function MgrDashboard() {
             {[
               ['Assigned',    getTasksForManager(user.id).filter(t=>t.status==='assigned').length,    'var(--info)'],
               ['In Progress', getTasksForManager(user.id).filter(t=>t.status==='in_progress').length, 'var(--primary)'],
+              ['Forwarded',   getTasksForManager(user.id).filter(t=>t.status==='forwarded').length,   'var(--purple)'],
               ['Submitted',   getTasksForManager(user.id).filter(t=>t.status==='submitted').length,   'var(--warning)'],
-              ['Closed',      getTasksForManager(user.id).filter(t=>t.status==='closed'||t.status==='approved').length, 'var(--success)'],
+              ['Closed/Done', getTasksForManager(user.id).filter(t=>t.status==='closed'||t.status==='approved'||t.status==='completed').length, 'var(--success)'],
             ].map(([label, count, color]) => (
               <div key={label} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10 }}>
                 <div style={{ display:'flex', alignItems:'center', gap:8 }}>

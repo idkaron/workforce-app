@@ -25,13 +25,19 @@ export default function Approvals() {
   const confirm = () => {
     if (action === 'approve') {
       update('requests', commentModal.id, { status:'approved', managerComment: comment || 'Approved.' });
-      // If extension request — update task deadline
       if (commentModal.type === 'extension' && commentModal.newDeadline) {
         update('tasks', commentModal.taskId, { deadline: commentModal.newDeadline, status:'in_progress' });
         toast('Extension approved — deadline updated automatically 📅');
       } else if (commentModal.type === 'submission') {
         update('tasks', commentModal.taskId, { status:'closed', approvedAt: new Date().toISOString() });
         toast('Task submission approved — marked as Closed ✅');
+      } else if (commentModal.type === 'update_request') {
+        // Apply the requested changes to the task
+        const patch = {};
+        if (commentModal.newDeadline)       patch.deadline = commentModal.newDeadline;
+        if (commentModal.requestedPriority) patch.priority = commentModal.requestedPriority;
+        if (Object.keys(patch).length > 0)  update('tasks', commentModal.taskId, patch);
+        toast('Task update request approved — changes applied ✅');
       } else {
         toast('Request approved ✅');
       }
@@ -45,8 +51,8 @@ export default function Approvals() {
 
   const tasks = getAll('tasks');
   const users = getAll('users');
-  const typeIcon  = { extension:'⏰', submission:'✅' };
-  const typeLabel = { extension:'Extension Request', submission:'Submission Review' };
+  const typeIcon  = { extension:'⏰', submission:'✅', update_request:'✏️' };
+  const typeLabel = { extension:'Extension Request', submission:'Submission Review', update_request:'Task Update Request' };
   const statusColor = { pending:'yellow', approved:'green', rejected:'red' };
 
   return (
@@ -96,12 +102,17 @@ export default function Approvals() {
                       {task && <div style={{ fontSize:12, color:'var(--muted)', marginTop:2 }}>Deadline: {new Date(task.deadline).toLocaleDateString()}</div>}
                     </div>
 
-                    <div style={{ fontSize:13.5, color:'var(--text-secondary)', lineHeight:1.6, marginBottom:r.newDeadline?8:0 }}>
+                    <div style={{ fontSize:13.5, color:'var(--text-secondary)', lineHeight:1.6, marginBottom:r.newDeadline||r.requestedPriority?8:0 }}>
                       <strong>Justification:</strong> {r.justification}
                     </div>
                     {r.newDeadline && (
                       <div style={{ fontSize:13, color:'var(--primary)', fontWeight:600, marginTop:6 }}>
                         📅 Requested new deadline: {new Date(r.newDeadline).toLocaleDateString()}
+                      </div>
+                    )}
+                    {r.requestedPriority && (
+                      <div style={{ fontSize:13, color:'var(--warning)', fontWeight:600, marginTop:4 }}>
+                        🏷️ Requested priority change: <strong>{r.requestedPriority.toUpperCase()}</strong>
                       </div>
                     )}
                     {r.managerComment && (

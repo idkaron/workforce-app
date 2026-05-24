@@ -29,12 +29,21 @@ const taskSchema = new mongoose.Schema({
   delayReason: { type: String, default: null },
   submittedAt: { type: String, default: null },
   approvedAt: { type: String, default: null },
-  createdAt: { type: String }
+  createdAt: { type: String },
+  // Multi-stage workflow support
+  parentTaskId: { type: String, default: null },
+  workflowHistory: [{
+    fromId:    { type: String },
+    toId:      { type: String },
+    note:      { type: String },
+    stage:     { type: String },
+    timestamp: { type: String }
+  }]
 }, opts);
 
 const requestSchema = new mongoose.Schema({
   id: { type: String, required: true, unique: true },
-  type: { type: String }, // 'extension', 'submission'
+  type: { type: String }, // 'extension', 'submission', 'update_request'
   taskId: { type: String },
   employeeId: { type: String },
   managerId: { type: String },
@@ -42,6 +51,7 @@ const requestSchema = new mongoose.Schema({
   status: { type: String, default: 'pending' }, // 'pending', 'approved', 'rejected'
   managerComment: { type: String, default: null },
   newDeadline: { type: String, default: null },
+  requestedPriority: { type: String, default: null },
   createdAt: { type: String }
 }, opts);
 

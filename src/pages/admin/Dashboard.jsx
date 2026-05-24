@@ -86,7 +86,7 @@ export default function AdminDashboard() {
             {recent.map(t=>{
               const emp = allUsers.find(u=>u.id===t.assignedTo);
               const mgr = allUsers.find(u=>u.id===t.createdBy);
-              const sMap= { assigned:'blue', in_progress:'primary', submitted:'yellow', approved:'green', rejected:'red', closed:'green' };
+              const sMap = { assigned:'blue', in_progress:'primary', submitted:'yellow', approved:'green', rejected:'red', closed:'green', forwarded:'purple', waiting_approval:'yellow', sent_to_client:'blue', client_approved:'green', completed:'green' };
               return (
                 <tr key={t.id}>
                   <td style={{ fontWeight:600, maxWidth:200, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{t.title}</td>

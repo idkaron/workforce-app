@@ -115,7 +115,16 @@ export function getTasksForManager(managerId) {
   const team = getMyTeam(managerId).map(u => u.id);
   return read('tasks').filter(t => team.includes(t.assignedTo) || t.createdBy === managerId);
 }
-export function getTasksForEmployee(empId) { return read('tasks').filter(t => t.assignedTo === empId); }
+export function getTasksForEmployee(empId) { 
+  return read('tasks').filter(t => t.assignedTo === empId); 
+}
+export function getTasksInvolvedWith(empId) {
+  // Returns tasks where employee is current assignee OR appears in workflow history
+  return read('tasks').filter(t => 
+    t.assignedTo === empId || 
+    (t.workflowHistory || []).some(h => h.fromId === empId || h.toId === empId)
+  );
+}
 export function getPendingRequests(managerId) {
   const team = getMyTeam(managerId).map(u => u.id);
   return read('requests').filter(r => team.includes(r.employeeId) && r.status === 'pending');
@@ -127,12 +136,33 @@ export function getUserById(id) {
   return safe;
 }
 export function taskRisk(task) {
-  if (task.status === 'closed' || task.status === 'approved') return 'green';
+  const safeStatuses = ['closed','approved','forwarded','waiting_approval','sent_to_client','client_approved','completed'];
+  if (safeStatuses.includes(task.status)) return 'green';
   const days = (new Date(task.deadline) - Date.now()) / 86400000;
   if (days < 0) return 'red';
   if (days < 3 || task.progress < 30) return 'red';
   if (days < 7 || task.progress < 60) return 'yellow';
   return 'green';
+}
+export function getWorkflowChain(taskId) {
+  const tasks = read('tasks');
+  // Find root task (walk up parentTaskId)
+  let root = tasks.find(t => t.id === taskId);
+  while (root && root.parentTaskId) {
+    const parent = tasks.find(t => t.id === root.parentTaskId);
+    if (!parent) break;
+    root = parent;
+  }
+  if (!root) return [];
+  // Walk down children
+  const chain = [];
+  const visit = (task) => {
+    chain.push(task);
+    const children = tasks.filter(t => t.parentTaskId === task.id);
+    children.forEach(visit);
+  };
+  visit(root);
+  return chain;
 }
 export function employeeRisk(empId) {
   const tasks = getTasksForEmployee(empId).filter(t => t.status !== 'closed' && t.status !== 'approved');
