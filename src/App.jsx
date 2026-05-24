@@ -1,4 +1,5 @@
 import { useState, useEffect, createContext, useContext, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { getSession, logout, demoLogin, login, create, update, getAll, syncWithServer } from './store.js';
 
 // ─── Context ──────────────────────────────────────────────────────────────────
@@ -109,18 +110,28 @@ export const Avatar = ({ name='?', color='#4F6EF7', size=36 }) => (
   </div>
 );
 
-export const Modal = ({ title, onClose, children, footer }) => (
-  <div className="modal-overlay" onMouseDown={e=>{ if(e.target===e.currentTarget)onClose(); }}>
-    <div className="modal-box" onClick={e=>e.stopPropagation()} onMouseDown={e=>e.stopPropagation()}>
-      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'20px 24px', borderBottom:'1px solid var(--border)' }}>
-        <h3 style={{ fontSize:17, fontWeight:700 }}>{title}</h3>
-        <button onClick={onClose} style={{ background:'none', border:'none', fontSize:20, cursor:'pointer', color:'var(--muted)', lineHeight:1 }}>×</button>
+export const Modal = ({ title, onClose, children, footer }) => {
+  const overlay = (
+    <div
+      className="modal-overlay"
+      onMouseDown={e => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <div
+        className="modal-box"
+        onClick={e => e.stopPropagation()}
+        onMouseDown={e => e.stopPropagation()}
+      >
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'20px 24px', borderBottom:'1px solid var(--border)' }}>
+          <h3 style={{ fontSize:17, fontWeight:700 }}>{title}</h3>
+          <button onClick={onClose} style={{ background:'none', border:'none', fontSize:20, cursor:'pointer', color:'var(--muted)', lineHeight:1 }}>×</button>
+        </div>
+        <div style={{ padding:24 }}>{children}</div>
+        {footer && <div style={{ padding:'16px 24px', borderTop:'1px solid var(--border)', display:'flex', gap:10, justifyContent:'flex-end' }}>{footer}</div>}
       </div>
-      <div style={{ padding:24 }}>{children}</div>
-      {footer && <div style={{ padding:'16px 24px', borderTop:'1px solid var(--border)', display:'flex', gap:10, justifyContent:'flex-end' }}>{footer}</div>}
     </div>
-  </div>
-);
+  );
+  return createPortal(overlay, document.body);
+};
 
 export const PageHeader = ({ title, subtitle, actions }) => (
   <div className="page-header">
