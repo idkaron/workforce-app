@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useApp, PageHeader, Btn, Badge, ProgressBar, Modal, Input, Textarea, Select, toast } from '../../App.jsx';
-import { getTasksForEmployee, taskRisk, update, create, getAll } from '../../store.js';
+import { getTasksForEmployee, taskRisk, update, create, remove, getAll } from '../../store.js';
 
 const PRIORITIES = [
   { value:'low',      label:'Low'      },
@@ -220,6 +220,55 @@ function UpdateRequestModal({ task, onClose, onConfirm }) {
   );
 }
 
+// ─── Create Task Modal ────────────────────────────────────────────────────────
+const TASK_PRIORITIES = [
+  { value:'low',      label:'Low'      },
+  { value:'medium',   label:'Medium'   },
+  { value:'high',     label:'High'     },
+  { value:'critical', label:'Critical' },
+];
+
+function CreateTaskModal({ user, onClose, onCreated }) {
+  const [form, setForm] = useState({ title:'', desc:'', priority:'medium', deadline:'' });
+  const f = k => e => setForm(p => ({ ...p, [k]: e.target.value }));
+
+  const handleSubmit = () => {
+    if (!form.title.trim() || !form.deadline) { toast('Title and deadline are required', 'error'); return; }
+    create('tasks', {
+      ...form,
+      status: 'assigned',
+      progress: 0,
+      assignedTo: user.id,
+      createdBy: user.id,
+      delayReason: null,
+      submittedAt: null,
+      approvedAt: null,
+      workflowHistory: [],
+      parentTaskId: null,
+    });
+    toast('Task created ✅');
+    onCreated();
+    onClose();
+  };
+
+  return (
+    <Modal title="📋 Create New Task" onClose={onClose}
+      footer={<><Btn variant="outline" onClick={onClose}>Cancel</Btn><Btn onClick={handleSubmit}>Create Task</Btn></>}>
+      <div style={{ display:'flex', flexDirection:'column', gap:18 }}>
+        <Input label="Task Title *" value={form.title} onChange={f('title')} placeholder="Clear, actionable task name"/>
+        <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+          <label className="form-label">Description</label>
+          <textarea className="form-input" value={form.desc} onChange={f('desc')} rows={3} placeholder="What needs to be done?"/>
+        </div>
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16 }}>
+          <Select label="Priority *" value={form.priority} onChange={f('priority')} options={TASK_PRIORITIES}/>
+          <Input label="Deadline *" type="date" value={form.deadline} onChange={f('deadline')}/>
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function MyTasks() {
   const { user, doRefresh } = useApp();
@@ -235,6 +284,7 @@ export default function MyTasks() {
   const [forwardModal,  setForwardModal]  = useState(null);
   const [updateModal,   setUpdateModal]   = useState(null);
   const [timelineModal, setTimelineModal] = useState(null);
+  const [createModal,   setCreateModal]   = useState(false);
 
   const load = () => { if (user) setTasks(getTasksForEmployee(user.id)); };
   useEffect(() => { load(); }, [user]);
@@ -329,7 +379,8 @@ export default function MyTasks() {
 
   return (
     <div>
-      <PageHeader title="My Tasks" subtitle="Manage your assigned tasks, submit, or forward to a coworker"/>
+      <PageHeader title="My Tasks" subtitle="Manage your assigned tasks, submit, or forward to a coworker"
+        actions={<Btn onClick={() => setCreateModal(true)}>+ New Task</Btn>}/>
 
       {/* Tab filters */}
       <div className="tab-bar">
@@ -505,6 +556,15 @@ export default function MyTasks() {
         <WorkflowTimeline
           task={timelineModal}
           onClose={() => setTimelineModal(null)}
+        />
+      )}
+
+      {/* ─── Create Task modal ────────────────────────────────────────────────── */}
+      {createModal && (
+        <CreateTaskModal
+          user={user}
+          onClose={() => setCreateModal(false)}
+          onCreated={() => { load(); doRefresh(); }}
         />
       )}
     </div>

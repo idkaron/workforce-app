@@ -31,12 +31,23 @@ export default function Tasks() {
   const f = k => e => setForm(p => ({ ...p, [k]: e.target.value }));
 
   const load = () => {
-    setTasks(getTasksForManager(user.id));
-    setTeam(getMyTeam(user.id));
+    if (user.role === 'employee') {
+      // Employees see tasks they created, are assigned to, or involved in
+      const all = getAll('tasks');
+      setTasks(all.filter(t => t.createdBy === user.id || t.assignedTo === user.id || (t.workflowHistory || []).some(h => h.fromId === user.id || h.toId === user.id)));
+      setTeam(getMyTeam(user.id)); // Let employees see and assign to all coworkers
+    } else {
+      setTasks(getTasksForManager(user.id));
+      setTeam(getMyTeam(user.id));
+    }
   };
   useEffect(() => { if(user) load(); }, [user]);
 
-  const openCreate = () => { setForm({ title:'', desc:'', priority:'medium', deadline:'', assignedTo:'' }); setModal('create'); };
+  const openCreate = () => {
+    const defaultAssignee = user.role === 'employee' ? user.id : '';
+    setForm({ title:'', desc:'', priority:'medium', deadline:'', assignedTo: defaultAssignee });
+    setModal('create');
+  };
 
   const saveTask = () => {
     if (!form.title.trim() || !form.deadline || !form.assignedTo) { toast('Title, deadline and assignee are required','error'); return; }
@@ -68,7 +79,7 @@ export default function Tasks() {
 
   const now = new Date();
   const allUsers   = getAll('users');
-  const empOptions = [{ value:'', label:'Select employee...' }, ...team.map(e => ({ value:e.id, label:e.name }))];
+  const empOptions = [{ value:'', label:'Select employee...' }, ...team.map(e => ({ value:e.id, label: e.id === user.id ? `${e.name} (me)` : e.name }))];
 
   let filtered = tasks.filter(t => {
     if (filter !== 'all' && t.status !== filter) return false;
@@ -78,7 +89,7 @@ export default function Tasks() {
 
   return (
     <div>
-      <PageHeader title="Task Management" subtitle="Create, assign, and manage the full task lifecycle"
+      <PageHeader title={user.role === 'employee' ? 'Task Management' : 'Task Management'} subtitle={user.role === 'employee' ? 'Create and manage your own tasks' : 'Create, assign, and manage the full task lifecycle'}
         actions={<Btn onClick={openCreate}>+ New Task</Btn>}/>
 
       {/* Filters */}

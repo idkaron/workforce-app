@@ -11,9 +11,15 @@ export default function Approvals() {
   const [action, setAction]     = useState('approve');
 
   const load = () => {
-    const team = getMyTeam(user.id).map(e=>e.id);
-    const all  = getAll('requests').filter(r => team.includes(r.employeeId)).sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));
-    setRequests(all);
+    if (user.role === 'employee') {
+      // Employees see their own submitted requests
+      const all = getAll('requests').filter(r => r.employeeId === user.id).sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+      setRequests(all);
+    } else {
+      const team = getMyTeam(user.id).map(e=>e.id);
+      const all  = getAll('requests').filter(r => team.includes(r.employeeId)).sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));
+      setRequests(all);
+    }
   };
   useEffect(() => { if(user) load(); }, [user]);
 
@@ -57,7 +63,7 @@ export default function Approvals() {
 
   return (
     <div>
-      <PageHeader title="Approvals Inbox" subtitle="Review employee extension requests and task submissions"/>
+      <PageHeader title="Approvals" subtitle={user.role === 'employee' ? 'Track the status of your submitted requests' : 'Review employee extension requests and task submissions'}/>
 
       {/* Tabs */}
       <div className="tab-bar">
@@ -117,13 +123,13 @@ export default function Approvals() {
                     )}
                     {r.managerComment && (
                       <div style={{ marginTop:10, background:'var(--primary-light)', borderRadius:'var(--radius-sm)', padding:'8px 14px', fontSize:13, color:'var(--primary)', fontWeight:500 }}>
-                        💬 <strong>Your comment:</strong> {r.managerComment}
+                        💬 <strong>{user.role === 'employee' ? 'Manager comment:' : 'Your comment:'}</strong> {r.managerComment}
                       </div>
                     )}
                   </div>
 
-                  {/* Actions */}
-                  {r.status === 'pending' && (
+                  {/* Actions — only managers can approve/reject */}
+                  {r.status === 'pending' && user.role !== 'employee' && (
                     <div style={{ display:'flex', flexDirection:'column', gap:8, flexShrink:0 }}>
                       <Btn variant="success" onClick={()=>openAction(r,'approve')} style={{ justifyContent:'center' }}>✅ Approve</Btn>
                       <Btn variant="danger"  onClick={()=>openAction(r,'reject')}  style={{ justifyContent:'center' }}>❌ Reject</Btn>

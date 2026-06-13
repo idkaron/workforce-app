@@ -197,10 +197,21 @@ const ToastContainer = () => {
 // ─── Sidebar ──────────────────────────────────────────────────────────────────
 const NAV = {
   employee: [
-    { id:'emp-dash',    icon:'⚡', label:'Dashboard'       },
-    { id:'my-tasks',    icon:'📋', label:'My Tasks'         },
-    { id:'requests',    icon:'📨', label:'Extension Requests'},
-    { id:'history',     icon:'📊', label:'Task History'     },
+    { id:'emp-dash',    icon:'⚡', label:'Dashboard',        section:'WORKSPACE' },
+    { id:'employees',   icon:'👥', label:'Employees'                          },
+    { id:'my-tasks',    icon:'📋', label:'My Tasks'          },
+    { id:'tasks',       icon:'🗂️', label:'Task Management'   },
+    { id:'deadlines',   icon:'📅', label:'Deadline Monitor'  },
+    { id:'approvals',   icon:'📨', label:'Approvals'         },
+    { id:'requests',    icon:'🔔', label:'Extension Requests'},
+    { id:'history',     icon:'📊', label:'Task History'      },
+    { id:'analytics',   icon:'📈', label:'Analytics'         },
+    { id:'customers',   icon:'🏢', label:'Customers',        section:'BUSINESS OPS' },
+    { id:'scheduling',  icon:'🗓️', label:'Scheduling'        },
+    { id:'quotations',  icon:'📋', label:'Quotations'        },
+    { id:'invoices',    icon:'💰', label:'Invoices'          },
+    { id:'contracts',   icon:'🔒', label:'AMC Contracts'     },
+    { id:'reports',     icon:'📄', label:'Reports'           },
   ],
   manager: [
     { id:'mgr-dash',    icon:'⚡', label:'Overview',      section:'WORKSPACE' },

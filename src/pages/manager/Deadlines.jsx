@@ -11,8 +11,17 @@ export default function Deadlines() {
 
   useEffect(() => {
     if (!user) return;
-    setTasks(getTasksForManager(user.id).filter(t => t.status !== 'closed' && t.status !== 'approved').sort((a,b)=>new Date(a.deadline)-new Date(b.deadline)));
-    setTeam(getMyTeam(user.id));
+    if (user.role === 'employee') {
+      const all = getAll('tasks');
+      const myTasks = all
+        .filter(t => (t.createdBy === user.id || t.assignedTo === user.id) && t.status !== 'closed' && t.status !== 'approved')
+        .sort((a,b) => new Date(a.deadline) - new Date(b.deadline));
+      setTasks(myTasks);
+      setTeam([user]);
+    } else {
+      setTasks(getTasksForManager(user.id).filter(t => t.status !== 'closed' && t.status !== 'approved').sort((a,b)=>new Date(a.deadline)-new Date(b.deadline)));
+      setTeam(getMyTeam(user.id));
+    }
   }, [user]);
 
   const now = new Date();

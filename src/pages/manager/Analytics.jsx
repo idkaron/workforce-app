@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useApp, PageHeader, Card, Avatar } from '../../App.jsx';
-import { getTasksForManager, getMyTeam, taskRisk } from '../../store.js';
+import { getTasksForManager, getMyTeam, taskRisk, getAll } from '../../store.js';
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 const COLORS = ['#4F6EF7','#10B981','#F59E0B','#EF4444','#8B5CF6','#06B6D4','#F97316','#A855F7'];
@@ -12,8 +12,15 @@ export default function Analytics() {
 
   useEffect(() => {
     if (!user) return;
-    setTeam(getMyTeam(user.id));
-    setTasks(getTasksForManager(user.id));
+    if (user.role === 'employee') {
+      const all = getAll('tasks');
+      const myTasks = all.filter(t => t.createdBy === user.id || t.assignedTo === user.id);
+      setTeam([user]);
+      setTasks(myTasks);
+    } else {
+      setTeam(getMyTeam(user.id));
+      setTasks(getTasksForManager(user.id));
+    }
   }, [user]);
 
   // Per-employee bar data
