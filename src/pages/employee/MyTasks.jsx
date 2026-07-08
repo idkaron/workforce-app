@@ -103,7 +103,7 @@ function WorkflowTimeline({ task, onClose }) {
 // ─── Forward Task Modal ───────────────────────────────────────────────────────
 function ForwardModal({ task, onClose, onConfirm }) {
   const allUsers  = getAll('users');
-  const coworkers = allUsers.filter(u => u.role === 'employee' && u.id !== task.id);
+  const coworkers = allUsers.filter(u => (u.role === 'employee' || u.role === 'manager') && u.id !== task.assignedTo);
   const [toId,  setToId]  = useState('');
   const [stage, setStage] = useState('');
   const [note,  setNote]  = useState('');

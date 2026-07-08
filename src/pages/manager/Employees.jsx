@@ -84,7 +84,7 @@ function EmployeeWorkspace({ employee, initialFilter = 'all', onClose, managerId
   const [tasks, setTasks] = useState([]);
   const [reassignModal, setReassignModal] = useState(null);
   const [editModal, setEditModal] = useState(null);
-  const team = getMyTeam(managerId);
+  const team = getAll('users').filter(u => u.role === 'employee' || u.role === 'manager');
 
   const loadTasks = () => {
     setTasks(getTasksForManager(managerId).filter(t => t.assignedTo === employee.id));
@@ -228,7 +228,12 @@ export default function Employees() {
   const [workspaceEmp, setWorkspaceEmp] = useState(null);
   const [workspaceFilter, setWorkspaceFilter] = useState('all');
 
-  useEffect(() => { if(user) setTeam(getMyTeam(user.id)); }, [user]);
+  useEffect(() => { 
+    if(user) {
+      const allUsers = getAll('users');
+      setTeam(allUsers.filter(u => u.role === 'employee' || u.role === 'manager')); 
+    }
+  }, [user]);
 
   const enriched = team.map(emp => {
     const tasks    = getTasksForManager(user.id).filter(t => t.assignedTo === emp.id);

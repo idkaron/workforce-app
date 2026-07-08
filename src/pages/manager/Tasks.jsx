@@ -33,9 +33,12 @@ export default function Tasks() {
   const load = () => {
     if (user.role === 'employee') {
       // Employees see tasks they created, are assigned to, or involved in
-      const all = getAll('tasks');
-      setTasks(all.filter(t => t.createdBy === user.id || t.assignedTo === user.id || (t.workflowHistory || []).some(h => h.fromId === user.id || h.toId === user.id)));
-      setTeam(getMyTeam(user.id)); // Let employees see and assign to all coworkers
+      const allTasks = getAll('tasks');
+      setTasks(allTasks.filter(t => t.createdBy === user.id || t.assignedTo === user.id || (t.workflowHistory || []).some(h => h.fromId === user.id || h.toId === user.id)));
+      
+      // Let employees see and assign to all coworkers AND managers
+      const allUsers = getAll('users');
+      setTeam(allUsers.filter(u => u.role === 'employee' || u.role === 'manager'));
     } else {
       setTasks(getTasksForManager(user.id));
       setTeam(getMyTeam(user.id));
