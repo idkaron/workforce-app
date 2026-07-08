@@ -78,12 +78,44 @@ function EditTaskModal({ task, onClose, onConfirm }) {
   );
 }
 
+// ─── Close Task Modal ───────────────────────────────────────────────────────
+function CloseTaskModal({ task, onClose, onConfirm }) {
+  const [note, setNote] = useState('');
+
+  const handleSubmit = () => {
+    onConfirm(task.id, note);
+  };
+
+  return (
+    <Modal title="✅ Approve & Close Task" onClose={onClose} footer={
+      <div style={{ display:'flex', gap:10 }}>
+        <Btn variant="outline" onClick={onClose}>Cancel</Btn>
+        <Btn variant="success" onClick={handleSubmit}>Close Task</Btn>
+      </div>
+    }>
+      <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
+        <p style={{ fontSize:14, color:'#64748B', lineHeight:1.6, margin:0 }}>
+          You are about to close <strong style={{ color:'#0F172A' }}>"{task.title}"</strong>. 
+          You can add an optional closing comment or approval note below.
+        </p>
+        <Input 
+          label="Closing Note (Optional)" 
+          value={note} 
+          onChange={e => setNote(e.target.value)} 
+          placeholder="e.g. Approved, great work! or Client satisfied..." 
+        />
+      </div>
+    </Modal>
+  );
+}
+
 // ─── Employee Workspace Modal ──────────────────────────────────────────────
 function EmployeeWorkspace({ employee, initialFilter = 'all', onClose, managerId, doRefresh }) {
   const [filter, setFilter] = useState(initialFilter);
   const [tasks, setTasks] = useState([]);
   const [reassignModal, setReassignModal] = useState(null);
   const [editModal, setEditModal] = useState(null);
+  const [closeModal, setCloseModal] = useState(null);
   const team = getAll('users').filter(u => u.role === 'employee' || u.role === 'manager');
 
   const loadTasks = () => {
@@ -121,6 +153,20 @@ function EmployeeWorkspace({ employee, initialFilter = 'all', onClose, managerId
     update('tasks', taskId, data);
     toast('Task updated');
     setEditModal(null);
+    loadTasks();
+    doRefresh();
+  };
+
+  const handleClose = (taskId, note) => {
+    const task = tasks.find(t => t.id === taskId);
+    const updates = { status: 'closed', approvedAt: new Date().toISOString() };
+    if (note) {
+      const history = task.workflowHistory || [];
+      updates.workflowHistory = [...history, { fromId: managerId, toId: managerId, stage: 'Task Closed', note }];
+    }
+    update('tasks', taskId, updates);
+    toast('Task closed with comments');
+    setCloseModal(null);
     loadTasks();
     doRefresh();
   };
@@ -163,6 +209,7 @@ function EmployeeWorkspace({ employee, initialFilter = 'all', onClose, managerId
             const risk = taskRisk(t);
             const days = Math.ceil((new Date(t.deadline)-now)/86400000);
             const isOverdue = risk==='red' && t.status!=='closed' && t.status!=='approved' && t.status!=='completed';
+            const canClose = t.status !== 'closed' && t.status !== 'approved' && t.status !== 'completed';
             
             return (
               <div key={t.id} style={{
@@ -192,10 +239,12 @@ function EmployeeWorkspace({ employee, initialFilter = 'all', onClose, managerId
 
                 {/* Actions */}
                 <div style={{ display:'flex', gap:8, marginTop:4, flexWrap:'wrap', paddingTop:10, borderTop:'1px dashed #E2E8F0' }}>
-                  {t.status === 'submitted' && <>
-                    <Btn variant="success" style={{ fontSize:11, padding:'4px 10px' }} onClick={()=>handleApprove(t)}>✅ Approve</Btn>
-                    <Btn variant="danger"  style={{ fontSize:11, padding:'4px 10px' }} onClick={()=>handleReject(t)}>❌ Reject</Btn>
-                  </>}
+                  {t.status === 'submitted' && (
+                    <Btn variant="danger" style={{ fontSize:11, padding:'4px 10px' }} onClick={()=>handleReject(t)}>❌ Reject</Btn>
+                  )}
+                  {canClose && (
+                    <Btn variant="success" style={{ fontSize:11, padding:'4px 10px' }} onClick={()=>setCloseModal(t)}>✅ Approve & Close</Btn>
+                  )}
                   <Btn variant="secondary" style={{ fontSize:11, padding:'4px 10px' }} onClick={()=>setReassignModal(t)}>🔄 Reassign</Btn>
                   <Btn variant="outline" style={{ fontSize:11, padding:'4px 10px' }} onClick={()=>setEditModal(t)}>✏️ Edit</Btn>
                   <Btn variant="ghost" style={{ fontSize:11, padding:'4px 10px', color:'#EF4444' }} onClick={()=>handleDelete(t.id)}>Trash</Btn>
@@ -212,6 +261,10 @@ function EmployeeWorkspace({ employee, initialFilter = 'all', onClose, managerId
       
       {editModal && (
         <EditTaskModal task={editModal} onClose={()=>setEditModal(null)} onConfirm={handleEdit} />
+      )}
+
+      {closeModal && (
+        <CloseTaskModal task={closeModal} onClose={()=>setCloseModal(null)} onConfirm={handleClose} />
       )}
     </Modal>
   );
